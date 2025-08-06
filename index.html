@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="index, follow">
     <title>LED Banner</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans&family=Oswald&family=Bebas+Neue&family=Orbitron&display=swap');
 
         body {
             font-family: sans-serif;
@@ -86,8 +87,9 @@
             overflow: hidden;
             border-radius: 10px;
             padding: 10px;
+            transition: background-color 0.3s, background-image 0.3s;
         }
-
+        
         #led-text {
             font-family: 'Courier New', Courier, monospace;
             color: #FFFFFF;
@@ -161,8 +163,22 @@
         <h3>Appearance</h3>
         <label for="text-color">Text Color:</label>
         <input type="color" id="text-color" value="#FFFFFF">
+        
+        <label class="checkbox-label" for="gradient-toggle">
+            <input type="checkbox" id="gradient-toggle">
+            Enable Gradient
+        </label>
+        
+        <div id="gradient-controls" class="hidden-control">
+            <label for="gradient-color2">Gradient Color 2:</label>
+            <input type="color" id="gradient-color2" value="#0000FF">
 
-        <label for="bg-color">Background Color:</label>
+            <label for="gradient-angle">Gradient Angle:</label>
+            <input type="range" id="gradient-angle" min="0" max="360" value="90">
+            <span id="gradient-angle-value">90°</span>
+        </div>
+
+        <label id="single-color-label" for="bg-color">Background Color:</label>
         <input type="color" id="bg-color" value="#000000">
 
         <label for="size-slider">Font Size:</label>
@@ -176,16 +192,16 @@
         <label for="font-select">Font:</label>
         <select id="font-select">
             <option value="'Pixelify Sans', cursive">Pixelify Sans</option>
+            <option value="'Bebas Neue', cursive">Bebas Neue</option>
+            <option value="'Oswald', sans-serif">Oswald</option>
+            <option value="'Orbitron', sans-serif">Orbitron</option>
             <option value="Arial">Arial</option>
             <option value="Verdana">Verdana</option>
             <option value="'Times New Roman'">Times New Roman</option>
-            <option value="'Courier New'">Courier New (Default)</option>
+            <option value="'Courier New'">Courier New</option>
             <option value="Georgia">Georgia</option>
             <option value="Impact">Impact</option>
             <option value="Monospace">Monospace</option>
-            <option value="Comic Sans MS">Comic Sans MS</option>
-            <option value="Trebuchet MS">Trebuchet MS</option>
-            <option value="'Lucida Console'">Lucida Console</option>
         </select>
 
         <label for="custom-font-input">Custom Font URL:</label>
@@ -216,6 +232,7 @@
         <p id="led-text">Hello, World!</p>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/screen-wake-lock@1.0.0/dist/screen-wake-lock.min.js"></script>
     <script>
         const textInput = document.getElementById('text-input');
         const textColorInput = document.getElementById('text-color');
@@ -235,15 +252,28 @@
         const enterSpeedSlider = document.getElementById('enter-speed-slider');
         const textLabel = document.getElementById('text-label');
         const contentHeading = document.getElementById('content-heading');
+        const gradientToggle = document.getElementById('gradient-toggle');
+        const gradientControls = document.getElementById('gradient-controls');
+        const gradientColor2 = document.getElementById('gradient-color2');
+        const gradientAngle = document.getElementById('gradient-angle');
+        const gradientAngleValue = document.getElementById('gradient-angle-value');
+        const singleColorLabel = document.getElementById('single-color-label');
 
+        let wakeLock = null;
         let timeInterval;
 
-        function updateTime() {
-            const now = new Date();
-            const hours = now.getHours().toString().padStart(2, '0');
-            const minutes = now.getMinutes().toString().padStart(2, '0');
-            const seconds = now.getSeconds().toString().padStart(2, '0');
-            ledText.textContent = `${hours}:${minutes}:${seconds}`;
+        // Function to update gradient
+        function updateGradient() {
+            if (gradientToggle.checked) {
+                const color1 = bgColorInput.value;
+                const color2 = gradientColor2.value;
+                const angle = gradientAngle.value;
+                ledDisplay.style.backgroundImage = `linear-gradient(${angle}deg, ${color1}, ${color2})`;
+                ledDisplay.style.backgroundColor = ''; // Clear background color
+            } else {
+                ledDisplay.style.backgroundImage = 'none';
+                ledDisplay.style.backgroundColor = bgColorInput.value;
+            }
         }
 
         // Mode Switch
@@ -263,7 +293,16 @@
                 ledText.textContent = textInput.value;
             }
         });
-
+        
+        // Time update function
+        function updateTime() {
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            ledText.textContent = `${hours}:${minutes}:${seconds}`;
+        }
+        
         // Update text
         textInput.addEventListener('input', () => {
             if (modeSelect.value === 'normal') {
@@ -280,9 +319,26 @@
             }
         });
 
-        // Update background color
-        bgColorInput.addEventListener('input', () => {
-            ledDisplay.style.backgroundColor = bgColorInput.value;
+        // Toggle gradient
+        gradientToggle.addEventListener('change', () => {
+            if (gradientToggle.checked) {
+                gradientControls.classList.remove('hidden-control');
+                singleColorLabel.textContent = 'Gradient Color 1:';
+            } else {
+                gradientControls.classList.add('hidden-control');
+                singleColorLabel.textContent = 'Background Color:';
+            }
+            updateGradient();
+        });
+
+        // Gradient color 1 change (uses bg-color input)
+        bgColorInput.addEventListener('input', updateGradient);
+        // Gradient color 2 change
+        gradientColor2.addEventListener('input', updateGradient);
+        // Gradient angle change
+        gradientAngle.addEventListener('input', () => {
+            gradientAngleValue.textContent = `${gradientAngle.value}°`;
+            updateGradient();
         });
 
         // Update font size
@@ -317,7 +373,6 @@
                 link.href = url;
                 head.appendChild(link);
                 
-                // Get font-family from the last part of the URL
                 const fontName = url.split('family=')[1].split(':')[0].replace(/\+/g, ' ');
                 ledText.style.fontFamily = `"${fontName}"`;
             }
@@ -363,19 +418,34 @@
             ledText.style.animation = 'custom 5s linear infinite';
         });
 
-        // Handle fullscreen mode
-        fullscreenBtn.addEventListener('click', () => {
-            if (ledDisplay.requestFullscreen) {
-                ledDisplay.requestFullscreen();
-            } else if (ledDisplay.mozRequestFullScreen) {
-                ledDisplay.mozRequestFullScreen();
-            } else if (ledDisplay.webkitRequestFullscreen) {
-                ledDisplay.webkitRequestFullscreen();
-            } else if (ledDisplay.msRequestFullscreen) {
-                ledDisplay.msRequestFullscreen();
+        // Handle fullscreen mode and wake lock
+        fullscreenBtn.addEventListener('click', async () => {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Screen Wake Lock is active!');
+                }
+                
+                if (ledDisplay.requestFullscreen) {
+                    ledDisplay.requestFullscreen();
+                }
+            } catch (err) {
+                console.error(`Wake Lock Error: ${err.name}, ${err.message}`);
+            }
+        });
+        
+        // Handle exiting fullscreen to release wake lock
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement) {
+                if (wakeLock !== null) {
+                    wakeLock.release()
+                        .then(() => {
+                            wakeLock = null;
+                            console.log('Screen Wake Lock is released!');
+                        });
+                }
             }
         });
     </script>
 </body>
 </html>
-
