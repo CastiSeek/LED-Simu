@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LED Banner</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans&display=swap');
+
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #222;
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .controls {
+            background-color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 300px;
+            margin-bottom: 20px;
+        }
+
+        .controls h3 {
+            border-bottom: 1px solid #555;
+            padding-bottom: 5px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        .controls label {
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+        }
+        
+        .hidden-control {
+            display: none;
+        }
+
+        .controls input[type="text"],
+        .controls input[type="color"],
+        .controls input[type="range"],
+        .controls select,
+        .controls textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #555;
+            border-radius: 5px;
+            background-color: #444;
+            color: #fff;
+        }
+
+        .controls button {
+            padding: 10px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .led-display {
+            width: 100%;
+            height: 300px;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        #led-text {
+            font-family: 'Courier New', Courier, monospace;
+            color: #FFFFFF;
+            font-size: 50px;
+            white-space: nowrap;
+            text-align: center;
+            text-shadow: 0 0 10px #FFFFFF, 0 0 20px #FFFFFF, 0 0 30px #FFFFFF;
+            position: relative;
+        }
+        
+        .no-bloom {
+            text-shadow: none !important;
+        }
+        
+        #custom-font-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #555;
+            border-radius: 5px;
+            background-color: #444;
+            color: #fff;
+            margin-top: 5px;
+        }
+
+        /* Animations */
+        .pulse { animation: pulse 1s infinite; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        
+        .scroll-left { 
+            animation: scroll-left var(--animation-duration, 10s) linear infinite; 
+            display: inline-block;
+        }
+        @keyframes scroll-left { 
+            0% { transform: translateX(100vw); } 
+            100% { transform: translateX(-100%); } 
+        }
+
+        .scroll-right { 
+            animation: scroll-right var(--animation-duration, 10s) linear infinite; 
+            display: inline-block;
+        }
+        @keyframes scroll-right { 
+            0% { transform: translateX(-100%); } 
+            100% { transform: translateX(100vw); } 
+        }
+
+        .enter-animation {
+            animation: enter var(--enter-speed, 1s) infinite steps(1, end);
+        }
+        @keyframes enter {
+            0%, 50% { opacity: 0; }
+            50.1%, 100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <h2>Settings</h2>
+
+        <label for="mode-select">Mode:</label>
+        <select id="mode-select">
+            <option value="normal">Normal</option>
+            <option value="time">Time</option>
+        </select>
+
+        <h3 id="content-heading">Content</h3>
+        <label for="text-input" id="text-label">Text:</label>
+        <input type="text" id="text-input" value="Hello, World!">
+
+        <h3>Appearance</h3>
+        <label for="text-color">Text Color:</label>
+        <input type="color" id="text-color" value="#FFFFFF">
+
+        <label for="bg-color">Background Color:</label>
+        <input type="color" id="bg-color" value="#000000">
+
+        <label for="size-slider">Font Size:</label>
+        <input type="range" id="size-slider" min="10" max="100" value="50">
+
+        <label class="checkbox-label" for="bloom-toggle">
+            <input type="checkbox" id="bloom-toggle" checked>
+            Enable Bloom
+        </label>
+        
+        <label for="font-select">Font:</label>
+        <select id="font-select">
+            <option value="'Pixelify Sans', cursive">Pixelify Sans</option>
+            <option value="Arial">Arial</option>
+            <option value="Verdana">Verdana</option>
+            <option value="'Times New Roman'">Times New Roman</option>
+            <option value="'Courier New'">Courier New (Default)</option>
+            <option value="Georgia">Georgia</option>
+            <option value="Impact">Impact</option>
+            <option value="Monospace">Monospace</option>
+            <option value="Comic Sans MS">Comic Sans MS</option>
+            <option value="Trebuchet MS">Trebuchet MS</option>
+            <option value="'Lucida Console'">Lucida Console</option>
+        </select>
+
+        <label for="custom-font-input">Custom Font URL:</label>
+        <input type="text" id="custom-font-input" placeholder="e.g., https://fonts.googleapis.com/css?family=Roboto">
+
+        <h3>Animation</h3>
+        <label for="animation-select">Animation:</label>
+        <select id="animation-select">
+            <option value="none">No animation</option>
+            <option value="pulse">Pulse</option>
+            <option value="scroll-left">Scroll Left</option>
+            <option value="scroll-right">Scroll Right</option>
+            <option value="enter">Enter</option>
+        </select>
+        
+        <div id="enter-speed-control" class="hidden-control">
+            <label for="enter-speed-slider">Speed (seconds):</label>
+            <input type="range" id="enter-speed-slider" min="0.5" max="5" step="0.1" value="1">
+        </div>
+        
+        <label for="custom-animation-css">Custom CSS Animation:</label>
+        <textarea id="custom-animation-css" placeholder="e.g., @keyframes custom { ... }"></textarea>
+
+        <button id="fullscreen-btn">Fullscreen</button>
+    </div>
+
+    <div class="led-display">
+        <p id="led-text">Hello, World!</p>
+    </div>
+
+    <script>
+        const textInput = document.getElementById('text-input');
+        const textColorInput = document.getElementById('text-color');
+        const bgColorInput = document.getElementById('bg-color');
+        const sizeSlider = document.getElementById('size-slider');
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const ledText = document.getElementById('led-text');
+        const ledDisplay = document.querySelector('.led-display');
+        const fontSelect = document.getElementById('font-select');
+        const customFontInput = document.getElementById('custom-font-input');
+        const animationSelect = document.getElementById('animation-select');
+        const customAnimationCss = document.getElementById('custom-animation-css');
+        const head = document.querySelector('head');
+        const bloomToggle = document.getElementById('bloom-toggle');
+        const modeSelect = document.getElementById('mode-select');
+        const enterSpeedControl = document.getElementById('enter-speed-control');
+        const enterSpeedSlider = document.getElementById('enter-speed-slider');
+        const textLabel = document.getElementById('text-label');
+        const contentHeading = document.getElementById('content-heading');
+
+        let timeInterval;
+
+        function updateTime() {
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            ledText.textContent = `${hours}:${minutes}:${seconds}`;
+        }
+
+        // Mode Switch
+        modeSelect.addEventListener('change', () => {
+            const mode = modeSelect.value;
+            if (mode === 'time') {
+                textInput.classList.add('hidden-control');
+                textLabel.classList.add('hidden-control');
+                contentHeading.textContent = "Time";
+                updateTime();
+                timeInterval = setInterval(updateTime, 1000);
+            } else {
+                textInput.classList.remove('hidden-control');
+                textLabel.classList.remove('hidden-control');
+                contentHeading.textContent = "Content";
+                clearInterval(timeInterval);
+                ledText.textContent = textInput.value;
+            }
+        });
+
+        // Update text
+        textInput.addEventListener('input', () => {
+            if (modeSelect.value === 'normal') {
+                ledText.textContent = textInput.value;
+            }
+        });
+
+        // Update text color and shadow
+        textColorInput.addEventListener('input', () => {
+            const newColor = textColorInput.value;
+            ledText.style.color = newColor;
+            if (bloomToggle.checked) {
+                ledText.style.textShadow = `0 0 10px ${newColor}, 0 0 20px ${newColor}, 0 0 30px ${newColor}`;
+            }
+        });
+
+        // Update background color
+        bgColorInput.addEventListener('input', () => {
+            ledDisplay.style.backgroundColor = bgColorInput.value;
+        });
+
+        // Update font size
+        sizeSlider.addEventListener('input', () => {
+            ledText.style.fontSize = `${sizeSlider.value}px`;
+        });
+
+        // Toggle bloom effect
+        bloomToggle.addEventListener('change', () => {
+            if (bloomToggle.checked) {
+                const currentColor = textColorInput.value;
+                ledText.style.textShadow = `0 0 10px ${currentColor}, 0 0 20px ${currentColor}, 0 0 30px ${currentColor}`;
+            } else {
+                ledText.style.textShadow = 'none';
+            }
+        });
+
+        // Handle font selection
+        fontSelect.addEventListener('change', () => {
+            ledText.style.fontFamily = fontSelect.value;
+        });
+
+        // Handle custom font import
+        customFontInput.addEventListener('change', () => {
+            const url = customFontInput.value;
+            if (url) {
+                const oldLink = document.querySelector('link[rel="stylesheet"][href*="fonts.googleapis.com"]');
+                if (oldLink) oldLink.remove();
+                
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = url;
+                head.appendChild(link);
+                
+                // Get font-family from the last part of the URL
+                const fontName = url.split('family=')[1].split(':')[0].replace(/\+/g, ' ');
+                ledText.style.fontFamily = `"${fontName}"`;
+            }
+        });
+
+        // Handle animation selection
+        animationSelect.addEventListener('change', () => {
+            ledText.classList.remove('pulse', 'scroll-left', 'scroll-right', 'enter-animation');
+            const selectedAnimation = animationSelect.value;
+            
+            enterSpeedControl.classList.add('hidden-control');
+
+            if (selectedAnimation !== 'none') {
+                ledText.classList.add(selectedAnimation === 'enter' ? 'enter-animation' : selectedAnimation);
+                if (selectedAnimation === 'enter') {
+                    enterSpeedControl.classList.remove('hidden-control');
+                    ledText.style.animationDuration = `${enterSpeedSlider.value}s`;
+                } else {
+                    ledText.style.animationDuration = '';
+                }
+            } else {
+                ledText.style.animation = 'none';
+            }
+        });
+        
+        // Handle enter animation speed
+        enterSpeedSlider.addEventListener('input', () => {
+            ledText.style.animationDuration = `${enterSpeedSlider.value}s`;
+        });
+
+        // Handle custom CSS animation
+        customAnimationCss.addEventListener('input', () => {
+            const oldStyle = document.getElementById('custom-animation-style');
+            if (oldStyle) {
+                oldStyle.remove();
+            }
+
+            const customStyle = document.createElement('style');
+            customStyle.id = 'custom-animation-style';
+            customStyle.textContent = customAnimationCss.value;
+            head.appendChild(customStyle);
+
+            ledText.style.animation = 'custom 5s linear infinite';
+        });
+
+        // Handle fullscreen mode
+        fullscreenBtn.addEventListener('click', () => {
+            if (ledDisplay.requestFullscreen) {
+                ledDisplay.requestFullscreen();
+            } else if (ledDisplay.mozRequestFullScreen) {
+                ledDisplay.mozRequestFullScreen();
+            } else if (ledDisplay.webkitRequestFullscreen) {
+                ledDisplay.webkitRequestFullscreen();
+            } else if (ledDisplay.msRequestFullscreen) {
+                ledDisplay.msRequestFullscreen();
+            }
+        });
+    </script>
+</body>
+</html>
+
